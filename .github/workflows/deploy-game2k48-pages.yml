@@ -32,6 +32,8 @@ jobs:
 
       - name: Build production bundle
         working-directory: game2k48
+        env:
+          NODE_OPTIONS: --openssl-legacy-provider
         run: ./gradlew browserProductionWebpack
 
       - name: Configure Pages

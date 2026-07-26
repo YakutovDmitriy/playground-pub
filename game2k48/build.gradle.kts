@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
+
 plugins {
     kotlin("js") version "1.6.10"
 }
@@ -25,4 +27,8 @@ kotlin {
             }
         }
     }
+}
+
+rootProject.extensions.configure<NodeJsRootExtension> {
+    nodeVersion = "18.20.4"
 }
