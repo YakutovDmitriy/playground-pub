@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Kotlin/JS and local IDE artifacts
+.gradle/
+**/.gradle/
+**/build/
+**/kotlin-js-store/
+**/node_modules/
+.idea/
+**/.idea/
