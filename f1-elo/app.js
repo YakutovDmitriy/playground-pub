@@ -107,7 +107,7 @@ function render() {
             "beforeend",
             `
 <tr>
-<td class="numeric">${driver.rank}</td>
+<td class="numeric">${idx + 1}</td>
 <td class="driver-name">${driver.name}</td>
 <td
     class="team-name"
@@ -116,6 +116,7 @@ function render() {
     ${driver.team}
 </td>
 <td class="numeric">${driver.zscore.toFixed(2)}</td>
+<td class="numeric">${driver.zscoreRank}</td>
 <td class="numeric">${driver.elo.toFixed(0)}</td>
 <td class="numeric">${driver.date}</td>
 </tr>
@@ -138,7 +139,7 @@ async function load() {
         .then(r => r.json());
 
     results.forEach((driver, index) => {
-        driver.rank = index + 1;
+        driver.zscoreRank = index + 1;
     });
 
     document.title = config.title;
