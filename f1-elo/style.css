@@ -35,6 +35,10 @@ body {
     background: #efefef;
 }
 
+.table-container {
+    overflow-x: auto;
+}
+
 .numeric {
     text-align: center;
 }
