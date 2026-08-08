@@ -1,11 +1,12 @@
-name: Deploy 2048 to GitHub Pages
+name: Deploy GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
       - "game2k48/**"
-      - ".github/workflows/deploy-game2k48-pages.yml"
+      - "f1-elo/**"
+      - ".github/workflows/deploy-pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -30,20 +31,30 @@ jobs:
           distribution: temurin
           java-version: "11"
 
-      - name: Build production bundle
+      - name: Build 2048
         working-directory: game2k48
         env:
           NODE_OPTIONS: --openssl-legacy-provider
         run: ./gradlew browserProductionWebpack
 
-      - name: Configure Pages
-        id: pages
-        uses: actions/configure-pages@v5
+      - name: Assemble Pages
+        run: |
+          mkdir _site
+
+          mkdir -p _site/2048
+          cp -R game2k48/build/distributions/. _site/2048
+
+          mkdir -p _site/f1-elo
+          rsync -a \
+              --exclude=.git \
+              f1-elo/ _site/f1-elo/
+
+      - uses: actions/configure-pages@v5
 
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: game2k48/build/distributions
+          path: _site
 
   deploy:
     environment:
@@ -52,6 +63,5 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v4
