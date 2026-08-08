@@ -225,3 +225,6 @@ __marimo__/
 **/node_modules/
 .idea/
 **/.idea/
+
+# F1-elo
+f1-elo/data/

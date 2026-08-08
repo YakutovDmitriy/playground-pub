@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>F1 Elo Viewer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h1 id="title">Loading...</h1>
+
+<div id="meta"></div>
+
+<div class="toolbar">
+    <label>
+        Show:
+        <select id="limit">
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+            <option value="200">200</option>
+            <option value="999999">All</option>
+        </select>
+    </label>
+
+    <label>
+        Search:
+        <input id="search" placeholder="Search by driver or team...">
+    </label>
+</div>
+
+<table id="table">
+    <thead>
+    <tr>
+        <th data-column="rank" data-title="#">#</th>
+        <th data-column="name" data-title="Driver">Driver</th>
+        <th data-column="team" data-title="Team">Team</th>
+        <th data-column="zscore" data-title="Z-score">Z-score</th>
+        <th data-column="elo" data-title="ELO">ELO</th>
+        <th data-column="date" data-title="Date">Date</th>
+    </tr>
+    </thead>
+
+    <tbody></tbody>
+</table>
+
+<script src="app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "DELTA_SCALE": 0.5,
+  "ELO_EPSILON": 1e-09,
+  "INITIAL_ELO": 1500,
+  "MAX_ELO": 1000000,
+  "MIN_ELO": 0,
+  "PROB_BASE": 10,
+  "PROB_SCALE": 0.0025,
+  "PROF_YEAR": 1979,
+  "YEARS_BACK": 5
+}

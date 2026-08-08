@@ -1,0 +1,75 @@
+body {
+    font-family: sans-serif;
+    margin: 40px;
+}
+
+.toolbar {
+    display: flex;
+    gap: 32px;
+    margin: 20px 0;
+}
+
+#table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+#table thead th {
+    position: sticky;
+    top: 0;
+    background: white;
+    cursor: pointer;
+}
+
+#table th,
+#table td {
+    border: 1px solid #ddd;
+    padding: 8px 10px;
+}
+
+#table tbody tr:nth-child(even) {
+    background: #f7f7f7;
+}
+
+#table th:hover {
+    background: #efefef;
+}
+
+.numeric {
+    text-align: center;
+}
+
+.team-name {
+    text-align: center;
+}
+
+#search {
+    width: 280px;
+}
+
+#meta {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 6px 20px;
+
+    width: fit-content;
+
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+
+    padding: 14px 18px;
+    margin-bottom: 24px;
+}
+
+#meta .label {
+    font-weight: 600;
+    color: #666;
+}
+
+#meta code {
+    font-family: monospace;
+    background: #f3f3f3;
+    border-radius: 4px;
+    padding: 1px 5px;
+}
