@@ -1,17 +1,28 @@
+import sys
 from pathlib import Path
 
+ROHANRAO = "rohanrao"
+ATHARVRANJAN = "atharvranjan"
 
-PATH = Path(__file__).parent / "data" / "f1-elo" / "v1.0.0"
+_dataset_handles = {
+    ROHANRAO: "rohanrao/formula-1-world-championship-1950-2020",
+    ATHARVRANJAN: "atharvranjan/formula-1-world-championship-1950-present",
+}
 
 
-def download_dataset():
+def path(dataset):
+    return Path(__file__).parent / "data" / "f1-elo" / dataset
+
+
+def download_dataset(dataset=ROHANRAO):
     import kagglehub
-    path = kagglehub.dataset_download(
-        handle="rohanrao/formula-1-world-championship-1950-2020",
-        output_dir=PATH,
+    handle = _dataset_handles[dataset]
+    output_path = kagglehub.dataset_download(
+        handle=handle,
+        output_dir=path(dataset),
     )
-    print("Path to dataset files:", path)
+    print("Path to dataset files:", output_path)
 
 
 if __name__ == "__main__":
-    download_dataset()
+    download_dataset(sys.argv[1])

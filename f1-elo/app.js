@@ -154,7 +154,7 @@ async function load() {
         <div>Peak ${params.YEARS_BACK}-year rolling z-score of Elo rating</div>
 
         <div class="label">Dataset</div>
-        <div>Kaggle (rohanrao), Formula&nbsp;1 (${dataset_stats.MIN_YEAR}-${dataset_stats.MAX_YEAR})</div>
+        <div>Kaggle (${params.DATASET}), Formula&nbsp;1 (${dataset_stats.MIN_YEAR}-${dataset_stats.MAX_YEAR})</div>
 
         <div class="label">Drivers</div>
         <div>${results.length}</div>

@@ -1,8 +1,11 @@
 import hashlib
 import json
 import math
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 import numpy as np
 import pandas as pd
+import sys
 from dataclasses import dataclass, asdict as dataclass_asdict
 from datetime import datetime
 from collections import defaultdict
@@ -190,6 +193,7 @@ class Elos:
 
 @dataclass
 class Params:
+    DATASET: str
     INITIAL_ELO: int = 1500
     MAX_ELO: float = 1000000
     MIN_ELO: float = 0
@@ -219,9 +223,8 @@ def dump_result(*, results, params, dataset_stats):
         json.dump(dataset_stats, f, sort_keys=True, indent=2)
 
 
-def main(*, dataset_path, params=None):
-    if params is None:
-        params = Params()
+def main(*, params):
+    dataset_path = dataset.path(params.DATASET)
 
     race_ids = sorted_race_ids(dataset_path=dataset_path)
     print(len(race_ids), "races")
@@ -263,7 +266,9 @@ def main(*, dataset_path, params=None):
             "elo": elo,
             "date": date
         })
-    dump_result(results=drivers_data, params=params, dataset_stats=dataset_stats)
+
+    if "-no-dump" not in sys.argv:
+        dump_result(results=drivers_data, params=params, dataset_stats=dataset_stats)
 
     data_to_show = []
     for i, data in enumerate(drivers_data[:40]):
@@ -281,7 +286,6 @@ def main(*, dataset_path, params=None):
         print(f"{id}. {team} {name}   pick zscore  {zscore:.2f}  with ELO  {elo:.2f}  at  {date}")
 
     # print("Avg ELOs by year matplotlib plot:")
-    # import matplotlib.pyplot as plt
     # years = []
     # avg_elos = []
     # for year in sorted(elos.elos_by_driver_by_year.keys()):
@@ -295,6 +299,40 @@ def main(*, dataset_path, params=None):
     # plt.title("Avg ELOs by year")
     # plt.show()
 
+    # print("ELOs by year for top-10 drivers:")
+    # date_strings = sorted(elos.elos_by_driver_by_date.keys())
+    # dates = [datetime.strptime(d, "%Y-%m-%d") for d in date_strings]
+    # plt.figure(figsize=(14, 7))
+    # used_dates = set()
+    # for driver_id, driver_data in zip(ordered_drivers[:4], drivers_data):
+    #     name = driver_data["name"]
+    #     if any([name.lower().startswith(p.lower())
+    #            for p in ["Nelson", "Alain", "Rubens"]]):
+    #         continue
+    #     elo_history = [
+    #         elos.elos_by_driver_by_date[d].get(driver_id, (None, None))[0]
+    #         for d in date_strings
+    #     ]
+    #     for date, elo in zip(dates, elo_history):
+    #         if elo is not None:
+    #             used_dates.add(date)
+    #     elo_history = pd.Series(elo_history).rolling(1, center=True).mean()
+    #     plt.plot(
+    #         dates,
+    #         elo_history,
+    #         label=name,
+    #         linewidth=1.3,
+    #         alpha=0.8,
+    #     )
+    # ax = plt.gca()
+    # ax.xaxis.set_major_locator(mdates.YearLocator(2))
+    # ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
+    # ax.set_xlim(min(used_dates), max(used_dates))
+    # plt.legend()
+    # plt.grid(True)
+    # plt.tight_layout()
+    # plt.show()
 
 if __name__ == "__main__":
-    main(dataset_path=dataset.PATH)
+    params = Params(DATASET=dataset.ATHARVRANJAN)
+    main(params=params)
