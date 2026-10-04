@@ -1,3 +1,4 @@
+from __future__ import annotations
 import hashlib
 import json
 import math
@@ -14,9 +15,13 @@ from pathlib import Path
 
 import dataset
 
+def format_race_name(name: str) -> str:
+    return name.replace("Grand Prix", "GP").strip()
+
+
 def sorted_race_ids(*, dataset_path):
     races = pd.read_csv(dataset_path / "races.csv")
-    return list(races.sort_values("date")[["raceId", "date"]].itertuples(index=False))
+    return list(races.sort_values("date")[["raceId", "date", "name"]].itertuples(index=False))
 
 
 def get_races_results(*, dataset_path):
@@ -69,6 +74,8 @@ def zscore(*, values, value):
 class DatasetStats:
     MIN_YEAR: int | None = None
     MAX_YEAR: int | None = None
+    LAST_RACE_DATE: str | None = None
+    LAST_RACE_NAME: str | None = None
 
     @classmethod
     def make(cls, *, race_ids):
@@ -87,6 +94,7 @@ class Elos:
         self.params = params
         self.elos = dict()
         self.elos_by_driver_by_date = defaultdict(dict)
+        self.race_name_by_date = dict()
 
     def prob_win(self, elo_a, elo_b):
         return 1. / (1 + math.pow(self.params.PROB_BASE, (elo_b - elo_a) * self.params.PROB_SCALE))
@@ -126,16 +134,18 @@ class Elos:
                 self.elos_by_driver_by_date[date][driver][0],
                 date,
                 self.elos_by_driver_by_date[date][driver][1],
+                self.race_name_by_date.get(date, ""),
             )
             for date in active_dates
             if date_to_year(date) >= self.params.PROF_YEAR + self.params.YEARS_BACK
         ]
         if not candidates:
-            return 0, self.elos[driver], global_min_date, None
+            return 0, self.elos[driver], global_min_date, None, self.race_name_by_date.get(global_min_date, "")
         return max(candidates)
 
 
-    def update(self, *, race_date, drivers_order):
+    def update(self, *, race_date, race_name, drivers_order):
+        self.race_name_by_date[race_date] = race_name
         n = len(drivers_order)
         team_of_driver = {driver: team for driver, team in drivers_order}
         drivers_order = [driver for driver, _ in drivers_order]
@@ -235,19 +245,26 @@ def main(*, params):
 
     elos = Elos(params=params)
 
+    last_race_date = None
+    last_race_name = None
     for race_index, race in enumerate(race_ids):
         if race_index % 100 == 0:
             print(f"Processing race {race_index + 1}/{len(race_ids)}")
-        race_id, race_date = race.raceId, race.date
+        race_id, race_date, race_name = race.raceId, race.date, format_race_name(race.name)
 
         race_results = races_results.get(race_id, None)
         if race_results is None:
             print("No results for race", race_id)
             continue
-        elos.update(race_date=race_date, drivers_order=race_results)
+        elos.update(race_date=race_date, race_name=race_name, drivers_order=race_results)
+        last_race_date = race_date
+        last_race_name = race_name
+
+    dataset_stats.LAST_RACE_DATE = last_race_date
+    dataset_stats.LAST_RACE_NAME = last_race_name
 
     def sort_key(driver_id):
-        zscore, elo, date, team = elos.pick_z_score_by_driver_with_elo_and_date(driver=driver_id)
+        zscore, elo, date, team, race = elos.pick_z_score_by_driver_with_elo_and_date(driver=driver_id)
         return -zscore, elo, date, team
 
     ordered_drivers = sorted(elos.elos.keys(), key=sort_key)
@@ -256,7 +273,7 @@ def main(*, params):
 
     drivers_data = []
     for i, driver_id in enumerate(ordered_drivers):
-        zscore, elo, date, team = elos.pick_z_score_by_driver_with_elo_and_date(driver=driver_id)
+        zscore, elo, date, team, race = elos.pick_z_score_by_driver_with_elo_and_date(driver=driver_id)
         name = driver_names.get(driver_id, f"(John Doe)")
         team_name = team_names.get(team, f"(Unknown Team)")
         drivers_data.append({
@@ -264,7 +281,8 @@ def main(*, params):
             "name": name,
             "zscore": zscore,
             "elo": elo,
-            "date": date
+            "date": date,
+            "race": race,
         })
 
     if "-no-dump" not in sys.argv:
@@ -272,18 +290,35 @@ def main(*, params):
 
     data_to_show = []
     for i, data in enumerate(drivers_data[:40]):
-        team, name, zscore, elo, date = data["team"], data["name"], data["zscore"], data["elo"], data["date"]
-        data_to_show.append((str(i + 1), f"[{team}]", name, zscore, elo, date))
+        team, name, zscore, elo, date, race = data["team"], data["name"], data["zscore"], data["elo"], data["date"], data["race"]
+        race_str = f"({race})" if race else ""
+        data_to_show.append((str(i + 1), f"[{team}]", name, zscore, elo, date, race_str))
 
-    max_idx_length = max(len(id) for id, _, _, _, _, _ in data_to_show)
-    max_team_length = max(len(team) for _, team, _, _, _, _ in data_to_show)
-    max_name_length = max(len(name) for _, _, name, _, _, _ in data_to_show)
+    max_idx_length = max(len(id) for id, _, _, _, _, _, _ in data_to_show)
+    max_team_length = max(len(team) for _, team, _, _, _, _, _ in data_to_show)
+    max_name_length = max(len(name) for _, _, name, _, _, _, _ in data_to_show)
+    max_race_length = max(len(race) for _, _, _, _, _, _, race in data_to_show)
     print(f"Top {len(data_to_show)} drivers by ELO (out of {len(ordered_drivers)}):")
-    for id, team, name, zscore, elo, date in data_to_show:
+    for id, team, name, zscore, elo, date, race in data_to_show:
         id = id.rjust(max_idx_length)
         team = team.ljust(max_team_length)
         name = name.ljust(max_name_length)
-        print(f"{id}. {team} {name}   pick zscore  {zscore:.2f}  with ELO  {elo:.2f}  at  {date}")
+        race = race.ljust(max_race_length)
+        print(f"{id}. {team} {name}   pick zscore  {zscore:.2f}  with ELO  {elo:.2f}  at  {date}  {race}")
+
+    max_date = max(elos.elos_by_driver_by_date.keys())
+    last_race_str = f" ({elos.race_name_by_date.get(max_date, '')})" if elos.race_name_by_date.get(max_date) else ""
+    cur = [
+        (driver_names.get(driver_id, ""), elo[0])
+        for driver_id, elo in elos.elos_by_driver_by_date[max_date].items()
+    ]
+    max_driver_name_len = max(len(name) for name, _ in cur)
+    cur.sort(key=lambda x: -x[1])
+    print(f"\nCurrent ELOs at {max_date}{last_race_str}:")
+    for i, (name, elo) in enumerate(cur):
+        id = str(i + 1).rjust(len(str(len(cur))))
+        name = name.rjust(max_driver_name_len)
+        print(f"{id}. {name}   ELO  {elo:.2f}")
 
     # print("Avg ELOs by year matplotlib plot:")
     # years = []

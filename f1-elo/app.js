@@ -58,7 +58,7 @@ function sortedResults() {
     if (tokens.length) {
         arr = arr.filter(driver => {
             const haystack =
-                `${driver.name} ${driver.team}`
+                `${driver.name} ${driver.team} ${driver.race ?? ""}`
                 .toLowerCase();
 
             return tokens.every(token =>
@@ -103,6 +103,9 @@ function render() {
 
     data.forEach((driver, idx) => {
 
+        const raceStr = driver.race ? ` (${driver.race})` : "";
+        const dateDisplay = driver.date.includes("(") ? driver.date : `${driver.date}${raceStr}`;
+
         tbody.insertAdjacentHTML(
             "beforeend",
             `
@@ -118,7 +121,7 @@ function render() {
 <td class="numeric">${driver.zscore.toFixed(2)}</td>
 <td class="numeric">${driver.zscoreRank}</td>
 <td class="numeric">${driver.elo.toFixed(0)}</td>
-<td class="numeric">${driver.date}</td>
+<td class="numeric">${dateDisplay}</td>
 </tr>
 `
         );
@@ -146,6 +149,10 @@ async function load() {
 
     document.getElementById("title").innerText = config.title;
 
+    const lastRaceStr = dataset_stats.LAST_RACE_DATE
+        ? `${dataset_stats.LAST_RACE_DATE}${dataset_stats.LAST_RACE_NAME ? ` (${dataset_stats.LAST_RACE_NAME})` : ""}`
+        : null;
+
     document.getElementById("meta").innerHTML = `
         <div class="label">Algorithm</div>
         <div>Codeforces rating algorithm adapted for Formula&nbsp;1</div>
@@ -155,7 +162,10 @@ async function load() {
 
         <div class="label">Dataset</div>
         <div>Kaggle (${params.DATASET}), Formula&nbsp;1 (${dataset_stats.MIN_YEAR}-${dataset_stats.MAX_YEAR})</div>
-
+        ${lastRaceStr ? `
+        <div class="label">Last race</div>
+        <div>${lastRaceStr}</div>
+        ` : ""}
         <div class="label">Drivers</div>
         <div>${results.length}</div>
 
